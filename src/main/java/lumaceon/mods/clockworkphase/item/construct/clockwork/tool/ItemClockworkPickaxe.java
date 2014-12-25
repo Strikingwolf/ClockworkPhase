@@ -1,5 +1,6 @@
 package lumaceon.mods.clockworkphase.item.construct.clockwork.tool;
 
+import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import lumaceon.mods.clockworkphase.ClockworkPhase;
@@ -11,12 +12,13 @@ import lumaceon.mods.clockworkphase.item.construct.IKeybindAbility;
 import lumaceon.mods.clockworkphase.item.construct.ITemporalChange;
 import lumaceon.mods.clockworkphase.item.construct.abstracts.IClockwork;
 import lumaceon.mods.clockworkphase.item.construct.abstracts.IDisassemble;
-import lumaceon.mods.clockworkphase.item.construct.abstracts.ITimeSandSupplier;
 import lumaceon.mods.clockworkphase.lib.MechanicTweaker;
 import lumaceon.mods.clockworkphase.lib.NBTTags;
 import lumaceon.mods.clockworkphase.lib.Textures;
+import lumaceon.mods.clockworkphase.network.MessageParticleSpawn;
 import lumaceon.mods.clockworkphase.network.MessageTemporalItemChange;
 import lumaceon.mods.clockworkphase.network.PacketHandler;
+import lumaceon.mods.clockworkphase.proxy.ClientProxy;
 import lumaceon.mods.clockworkphase.util.NBTHelper;
 import lumaceon.mods.clockworkphase.util.TensionHelper;
 import lumaceon.mods.clockworkphase.util.TimeSandHelper;
@@ -43,7 +45,7 @@ public class ItemClockworkPickaxe extends ItemPickaxe implements IClockwork, IDi
         super(mat);
         this.setCreativeTab(ClockworkPhase.instance.creativeTabClockworkPhase);
         this.setMaxStackSize(1);
-        this.setMaxDamage(10);
+        this.setMaxDamage(50);
         this.setNoRepair();
         this.setHarvestLevel("pickaxe", 3);
     }
@@ -150,7 +152,7 @@ public class ItemClockworkPickaxe extends ItemPickaxe implements IClockwork, IDi
                     return true;
                 }
 
-                if(memory > 0)
+                if(memory > 0 && !world.isRemote)
                 {
                     if(this.func_150893_a(is, block) > 1.0F)
                     {
@@ -168,6 +170,7 @@ public class ItemClockworkPickaxe extends ItemPickaxe implements IClockwork, IDi
                             if(world.rand.nextInt(chance) == 0)
                             {
                                 this.addTimeSand(is, MechanicTweaker.PICKAXE_TIME_SAND_INCREMENT);
+                                PacketHandler.INSTANCE.sendToAllAround(new MessageParticleSpawn(x + 0.5, y + 0.5, z + 0.5, 1), new NetworkRegistry.TargetPoint(world.provider.dimensionId, x + 0.5, y + 0.5, z + 0.5, 64));
                             }
                         }
                     }
@@ -195,6 +198,7 @@ public class ItemClockworkPickaxe extends ItemPickaxe implements IClockwork, IDi
             if(memoryWebPower > 0)
             {
                 chance = MechanicTweaker.TIME_SAND_CHANCE_FACTOR / memoryWebPower;
+                if(chance < 1) { chance = 1; }
             }
 
             list.add("");

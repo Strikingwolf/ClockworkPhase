@@ -42,6 +42,7 @@ public class ItemClockworkSaber extends ItemTimeSandClockworkAbstract implements
             if(memoryWebPower > 0)
             {
                 chance = MechanicTweaker.TIME_SAND_CHANCE_FACTOR / memoryWebPower;
+                if(chance < 1) { chance = 1; }
             }
 
             list.add("");
@@ -107,6 +108,12 @@ public class ItemClockworkSaber extends ItemTimeSandClockworkAbstract implements
     public boolean onBlockDestroyed(ItemStack is, World world, Block p_150894_3_, int p_150894_4_, int p_150894_5_, int p_150894_6_, EntityLivingBase p_150894_7_)
     {
         return true;
+    }
+
+    @Override
+    public int getMaxTimeSand()
+    {
+        return MechanicTweaker.MAX_TIME_SAND_TOOLS;
     }
 
     @Override

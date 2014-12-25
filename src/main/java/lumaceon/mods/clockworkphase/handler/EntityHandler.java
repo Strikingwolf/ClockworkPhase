@@ -2,6 +2,7 @@ package lumaceon.mods.clockworkphase.handler;
 
 import cpw.mods.fml.common.eventhandler.Event;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.network.NetworkRegistry;
 import lumaceon.mods.clockworkphase.block.extractor.ExtractorAreas;
 import lumaceon.mods.clockworkphase.block.tileentity.TileEntityExtractor;
 import lumaceon.mods.clockworkphase.extendeddata.ExtendedPlayerProperties;
@@ -13,6 +14,9 @@ import lumaceon.mods.clockworkphase.item.construct.pocketwatch.ItemPocketWatch;
 import lumaceon.mods.clockworkphase.lib.MechanicTweaker;
 import lumaceon.mods.clockworkphase.lib.NBTTags;
 import lumaceon.mods.clockworkphase.lib.Phases;
+import lumaceon.mods.clockworkphase.network.MessageParticleSpawn;
+import lumaceon.mods.clockworkphase.network.PacketHandler;
+import lumaceon.mods.clockworkphase.proxy.ClientProxy;
 import lumaceon.mods.clockworkphase.util.InventorySearchHelper;
 import lumaceon.mods.clockworkphase.util.NBTHelper;
 import net.minecraft.entity.item.EntityItem;
@@ -116,7 +120,7 @@ public class EntityHandler
     @SubscribeEvent
     public void onEntityAttacked(LivingAttackEvent event)
     {
-        if(event.source.getSourceOfDamage() instanceof EntityPlayer) //Attack was from player
+        if(event.source.getEntity() instanceof EntityPlayer) //Attack was from player
         {
             EntityPlayer player = (EntityPlayer)event.source.getEntity();
             if(event.entityLiving.getHealth() - event.ammount <= 0) //Attack is fatal
@@ -125,7 +129,7 @@ public class EntityHandler
                 {
                     ItemStack is = player.inventory.getCurrentItem();
                     int memory = NBTHelper.getInt(is, NBTTags.MEMORY);
-                    if(memory > 0)
+                    if(memory > 0 && !player.worldObj.isRemote)
                     {
                         int memoryWebPower = (int)(memory * Math.pow(player.experienceLevel + 1.0F, 2.0F));
                         int chance = MechanicTweaker.TIME_SAND_CHANCE_FACTOR;
@@ -138,9 +142,10 @@ public class EntityHandler
                         if(player.worldObj.rand.nextInt(chance) == 0)
                         {
                             ((ItemClockworkSaber)is.getItem()).addTimeSand(is, MechanicTweaker.SABER_TIME_SAND_INCREMENT_KILL);
+                            PacketHandler.INSTANCE.sendToAllAround(new MessageParticleSpawn(event.entity.posX, event.entity.posY, event.entity.posZ, 1), new NetworkRegistry.TargetPoint(player.worldObj.provider.dimensionId, event.entity.posX, event.entity.posY, event.entity.posZ, 64));
                         }
                     }
-                    if(is.getItem() instanceof ItemTemporalClockworkSaber)
+                    if(!player.worldObj.isRemote && is.getItem() instanceof ItemTemporalClockworkSaber)
                     {
                         ItemStack result = new ItemStack(ModItems.nuggetTemporal);
                         float f = 0.7F;
